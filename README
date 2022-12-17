@@ -1,8 +1,15 @@
 This is a multi-threaded multi-pool FPGA and ASIC miner for bitcoin.
 
-This code is provided entirely free of charge by it's programmers.
+This code is provided entirely free of charge by the programmer in his spare
+time so donations would be greatly appreciated. Please consider donating to the
+addresses below. Driver development for new ASIC only bitcoin hardware can be
+suitably sponsored.
 
-If you wish to support it, simply mine at https://kano.is/
+Con Kolivas <kernel@kolivas.org>
+15qSxP1SQcUX3o4nhkfdbgyoWEFMomJ4rZ
+
+Donations for the maintenance and upkeep of this Github repository are welcome
+1satoshirhqmPxzyAL7Left4pTXwmrH3d
 
 This code is licensed under the GPLv3. This means that the source to any
 modifications you make to this code MUST be provided by law if you distribute
@@ -33,7 +40,11 @@ FAQ
 
 GIT TREE:
 
-https://github.com/kanoi/cgminer
+https://github.com/phaenomenon/cgminer
+
+Support thread:
+
+https://bitcointalk.org/index.php?topic=28402.0
 
 SEE ALSO API-README, ASIC-README and FGPA-README FOR MORE INFORMATION ON EACH.
 
@@ -41,25 +52,25 @@ SEE ALSO API-README, ASIC-README and FGPA-README FOR MORE INFORMATION ON EACH.
 
 EXECUTIVE SUMMARY ON USAGE:
 
-Single pool:
+Single pool via http or stratum:
 
+cgminer -o http://pool:port -u username -p password
 cgminer -o stratum+tcp://pool:port -u username -p password
 
-Multiple pools:
+Multiple pools via http or stratum:
 
+cgminer -o http://pool1:port -u pool1username -p pool1password -o http://pool2:port -u pool2usernmae -p pool2password
 cgminer -o stratum+tcp://pool1:port -u pool1username -p pool1password -o stratum+tcp://pool2:port -u pool2usernmae -p pool2password
 
-Single pool with a standard http proxy:
+Single pool with a standard http proxy via http or stratum:
 
+cgminer -o "http:proxy:port|http://pool:port" -u username -p password
 cgminer -o "http:proxy:port|stratum+tcp://pool:port" -u username -p password
 
-Single pool with a socks5 proxy:
+Single pool with a socks5 proxy via http or stratum:
 
+cgminer -o "socks5:proxy:port|http://pool:port" -u username -p password
 cgminer -o "socks5:proxy:port|stratum+tcp://pool:port" -u username -p password
-
-Single pool with stratum protocol support:
-
-cgminer -o stratum+tcp://pool:port -u username -p password
 
 The list of proxy types are:
  http:    standard http 1.1 proxy
@@ -74,7 +85,6 @@ not be available. All are available since CURL version 7.19.4
 
 If you specify the --socks-proxy option to cgminer, it will only be applied to all pools
 that don't specify their own proxy setting like above
-
 
 After saving configuration from the menu, you do not need to give cgminer any
 arguments and it will load your configuration.
@@ -113,7 +123,6 @@ Optional:
 	Will use a copy included with the source if unavailable.
 
 If building from git:
-	git           (of course)
 	autoconf
 	automake
 
@@ -838,7 +847,7 @@ followed by the difficulty target the pool is currently asking for.
 
 Also many issues and FAQs are covered in the forum thread
 dedicated to this program,
-	http://forum.bitcoin.org/index.php?topic=28402.0
+	https://bitcointalk.org/index.php?topic=28402.0
 
 DISPLAY:
 
@@ -878,13 +887,13 @@ GF is Getwork Fail Occasions (server slow to provide work)
 RF is Remote Fail occasions (server slow to accept work)
 
 Followed by:
- Connected to stratum.kano.is diff 3.45K with stratum as user Kano
+ Connected to solo.ckpool.org diff 3.45K with stratum as user <your-payout-address>
 
 The diff shown is the current vardiff requested by the pool currently being
 mined at.
 
 Followed by:
-Block: b1a8c743...  Diff:19T  Started: [00:14:27.666]  Best share: 1.18M
+Block: 8a28e479...  Diff:34.2T  Started: [00:08:51.374]  Best share: 53.88M
 
 This shows a short stretch about the current block, when the new block started,
 and the all time best difficulty share you've found since starting cgminer
@@ -1008,11 +1017,69 @@ quotas in a configuration file they would be specified thus:
 
 SOLO MINING
 
-Solo mining doesn't currently work
+Solo mining can be done efficiently as a single pool entry or a backup to
+any other pooled mining and it is recommended everyone have solo mining set up
+as their final backup in case all their other pools are DDoSed/down for the
+security of the network. To enable solo mining, one must be running a local
+bitcoind/bitcoin-qt or have one they have rpc access to. To do this, edit your
+bitcoind configuration file (bitcoin.conf) with the following extra lines,
+using your choice of username and password:
 
+rpcuser=username
+rpcpassword=password
+
+Restart bitcoind, then start cgminer, pointing to the bitcoind and choose a
+legacy P2PKH address (prefix '1' on mainnet, prefix 'm' or 'n' on testnet)
+with the following options, altering to suit your setup:
+
+cgminer -o http://localhost:8332 -u username -p password --btc-address 1satoshirhqmPxzyAL7Left4pTXwmrH3d
+
+Note the http:// is mandatory for solo mining.
+
+When solo mining the following important points should be considered. Both the full
+node hardware and the internet link should be of the highest possible speed and quality.
+In the case of a valid hash value the legitimate block must be propagated to all other
+full nodes out there within the shortest possible time. Slow computers, bad or faulty
+internet links are fatal, they could lead to the fact that the information would not be
+propagated fast enough into the network and you risk to loose the block. Solo mining on
+a cloud hosted node is also not recommended due to the sheer amount of data
+(several TB per month) that is generated just for GBT traffic. In such cloud hosted
+constellations an intermediate pool via stratum should be considered. Either use existing
+pools like solo.ckpool.or or setup your own pool. Unless the miner and the full node are
+both physically located in the data center or in the same place and thus the transferred
+data volume is of no further significance. You should avoid using VPN or TOR connections
+when solo mining as each additional link in the chain represents higher costs and risks.
+In the worst case your will lose a block. Always use the best possible hardware and internet
+connection and make sure that it is reliable for the long term.
+
+You can use the provided launcher and configuration file, read next section
 ---
 
-LOGGING
+LAUNCHERS and LOGGING
+
+For an uncomplicated and quick start the included start scripts (launcher) and the corresponding
+sample configurations can be used:
+
+- mining on a public solo pool using the example solo.ckpool.org
+Launcher = start_solomining_pool.sh
+configuration file used = "solomining_pool.conf"
+
+- mining on your own full node using mainnet
+launcher = "start_solomining_ownFullNode_mainnet.sh"
+configuration file used = "solomining_ownFullNode_mainnet.conf"
+
+- mining on your own full node using the testnet
+launcher = "start_solomining_ownFullNode_testnet.sh"
+configuration file used = "solomining_ownFullNode_testnet.conf"
+
+All three start scripts automatically log the output to the logs/ subdirectory with a timestamp.
+
+It is always recommended to mine on the testnet first to guarantee smooth operation. Difficulty on
+testnet is always low and allows each participant to mine one block. If no block is mined on the
+testnet for 20 minutes the network automatically resets the difficulty to the lowest possible value
+of 1. This gives every miner out there the possibility to mine a block even with a CPU miner.
+You can test the mining hardware the payout to your own testnet bitcoin address or various option.
+If all tests are positive and as expected you can switch to productive mode and mine on mainnet.
 
 cgminer will log to stderr if it detects stderr is being redirected to a file.
 To enable logging simply add 2>logfile.txt to your command line and logfile.txt
@@ -1186,7 +1253,8 @@ A: Start cgminer with your regular commands and add -D -T --verbose and provide
 the full startup output and a summary of your hardware and operating system.
 
 Q: Why don't you provide win64 builds?
-A: Win32 builds work everywhere.
+A: Win32 builds work everywhere and there is precisely zero advantage to a
+64 bit build on windows.
 
 Q: Is it faster to mine on windows or linux?
 A: It makes no difference in terms of performance. It comes down to choice of
@@ -1198,10 +1266,21 @@ Q: My network gets slower and slower and then dies for a minute?
 A; Try the --net-delay option if you are on a GBT server. This does nothing
 with stratum mining.
 
+Q: How do I tune for p2pool?
+A: It is also recommended to use --failover-only since the work is effectively
+like a different block chain, and not enabling --no-submit-stale. If mining with
+a BFL (fpga) minirig, it is worth adding the --bfl-range option.
+
 Q: I run PHP on windows to access the API with the example miner.php. Why does
 it fail when php is installed properly but I only get errors about Sockets not
 working in the logs?
 A: http://us.php.net/manual/en/sockets.installation.php
+
+Q: What is a PGA?
+A: Cgminer supports 3 FPGAs: BitForce, Icarus and ModMiner.
+They are Field-Programmable Gate Arrays that have been programmed to do Bitcoin
+mining. Since the acronym needs to be only 3 characters, the "Field-" part has
+been skipped.
 
 Q: What is an ASIC?
 A: They are Application Specify Integrated Circuit devices and provide the
@@ -1213,7 +1292,9 @@ A: Stratum is a protocol designed for pooled mining in such a way as to
 minimise the amount of network communications, yet scale to hardware of any
 speed. With versions of cgminer 2.8.0+, if a pool has stratum support, cgminer
 will automatically detect it and switch to the support as advertised if it can.
-The advantages of stratum to the miner are no
+If you input the stratum port directly into your configuration, or use the
+special prefix "stratum+tcp://" instead of "http://", cgminer will ONLY try to
+use stratum protocol mining. The advantages of stratum to the miner are no
 delays in getting more work for the miner, less rejects across block changes,
 and far less network communications for the same amount of mining hashrate. If
 you do NOT wish cgminer to automatically switch to stratum protocol even if it
@@ -1276,12 +1357,18 @@ you wish to decode as the second pool configured. Note the bitcoind NEEDS the
 http:// prefix.
 
 e.g.:
-./cgminer -o http://localhost:8332 -u user -p pass -o stratum.kano.is:3333 -u cgminer --decode
+./cgminer --decode -o http://localhost:8332 -u user -p pass -o solo.ckpool.org:3333 -u YourPayoutAddress
 
 
 ---
 
-This code is provided entirely free of charge by the programmers.
+This code is provided entirely free of charge by the programmer in his spare
+time so donations would be greatly appreciated. Please consider donating to the
+address below. Driver development for new ASIC only bitcoin hardware can be
+suitably sponsored.
 
-If you wish to support it, simply mine at https://kano.is/
+Con Kolivas <kernel@kolivas.org>
+15qSxP1SQcUX3o4nhkfdbgyoWEFMomJ4rZ
 
+Donations for the maintenance and upkeep of this Github repository are welcome
+1satoshirhqmPxzyAL7Left4pTXwmrH3d
